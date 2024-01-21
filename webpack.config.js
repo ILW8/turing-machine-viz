@@ -90,6 +90,7 @@ const commonConfig = {
 //////////////////////
 
 const devConfig = {
+  devtool: 'source-map',
   output: {pathinfo: true}
 };
 

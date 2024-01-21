@@ -8,11 +8,13 @@
  *   Returning null/undefined halts the machine (no transition defined).
  * @param {state} startState  The state to start in.
  * @param         tape        The tape to use.
+ * @param   editableTape      (new) the same as tape, except graphically editable
  */
-function TuringMachine(transition, startState, tape) {
+function TuringMachine(transition, startState, tape, editableTape) {
   this.transition = transition;
   this.state = startState;
   this.tape = tape;
+  this.editableTape = editableTape;
 }
 
 TuringMachine.prototype.toString = function () {

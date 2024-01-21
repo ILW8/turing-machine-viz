@@ -1,6 +1,6 @@
 'use strict';
 var Tape = require('./Tape.js'),
-    d3   = require('d3');
+  d3 = require('d3');
 require('./tape.css');
 
 var cellWidth = 50;
@@ -22,7 +22,7 @@ function initTapeCells(selection) {
 function positionCells(selection, offset) {
   offset = (offset == null) ? 0 : offset;
   selection.attr('transform', function (d, i) {
-    return 'translate(' + (-cellWidth+10 + cellWidth*(i+offset)) + ')';
+    return 'translate(' + (-cellWidth + 10 + cellWidth * (i + offset)) + ')';
   });
   return selection;
 }
@@ -30,15 +30,44 @@ function positionCells(selection, offset) {
 function repositionWrapper(wrapper) {
   wrapper.attr('transform', 'translate(0 10)')
     .transition()
-      .duration(0)
+    .duration(0)
     .select('.exiting')
-      .remove();
+    .remove();
+}
+
+
+function EditableTapeViz(vizDiv, lookaround, blank, input) {
+  Tape.call(this, blank, input);
+  Object.defineProperty(this, 'lookaround', {
+    value: lookaround,
+    writable: false,
+    enumerable: true
+  });
+  Object.defineProperty(this, 'domNode', {
+    value: vizDiv,
+    writable: false,
+    enumerable: true
+  });
+
+
+  vizDiv.selectAll('.edit-table-cell')
+    .data(this.readRange(-lookaround, lookaround))
+    .enter()
+    .append('input')
+    .attr('type', 'text')
+    .attr('style', 'width: 40px; height: 32px; text-align: center;')
+    .attr('data-box-index', function (_, i) {return i;})
+    .attr('value', function (d) {return d;})
+    .attr('class', 'edit-table-cell');
 }
 
 // Tape visualization centered around the tape head.
 function TapeViz(svg, lookaround, blank, input) {
   Tape.call(this, blank, input);
 
+  // this.lookaround.value = 9
+  // this.lookaround.writable = false
+  // this.lookaround.enumerable = true
   Object.defineProperty(this, 'lookaround', {
     value: lookaround,
     writable: false,
@@ -51,34 +80,36 @@ function TapeViz(svg, lookaround, blank, input) {
   });
 
   // width is before + head + after, trimming 2 off to show cut-off tape ends
-  var width  = cellWidth * (lookaround+1+lookaround-2) + 2*10;
-  var height = cellHeight + 2*10;
+  var width = cellWidth * (lookaround + 1 + lookaround - 2) + 2 * 10;
+  var height = cellHeight + 2 * 10;
   svg.attr({
     'width': '95%',
     'viewBox': [0, 0, width, height].join(' ')
   });
 
   this.wrapper = svg.append('g')
-      .attr('class', 'wrapper')
-      .call(repositionWrapper);
+    .attr('class', 'wrapper')
+    .call(repositionWrapper);
 
   svg.append('rect')
-      .attr({'id': 'tape-head',
-             'width': (1+1/5) * cellWidth,
-             'height': (1+1/5) * cellHeight,
-             'x': -cellWidth+10/2 + cellWidth*lookaround,
-             'y': 10/2
-           });
+    .attr({
+      'id': 'tape-head',
+      'width': (1 + 1 / 5) * cellWidth,
+      'height': (1 + 1 / 5) * cellHeight,
+      'x': -cellWidth + 10 / 2 + cellWidth * lookaround,
+      'y': 10 / 2
+    });
 
   this.wrapper.selectAll('.tape-cell')
-      .data(this.readRange(-lookaround, lookaround))
+    .data(this.readRange(-lookaround, lookaround))
     .enter()
     .append('g')
-      .call(initTapeCells)
-      .call(positionCells)
+    .call(initTapeCells)
+    .call(positionCells)
   ;
 }
 
+// poor man's inheritance
 TapeViz.prototype = Object.create(Tape.prototype);
 TapeViz.prototype.constructor = TapeViz;
 
@@ -94,22 +125,24 @@ TapeViz.prototype.write = function (symbol) {
   this.wrapper.selectAll('.exiting').remove();
 
   d3.select(this.wrapper[0][0].childNodes[this.lookaround])
-      .datum(symbol)
+    .datum(symbol)
     .select('text')
-      .attr('fill-opacity', '1')
-      .attr('stroke-opacity', '1')
+    .attr('fill-opacity', '1')
+    .attr('stroke-opacity', '1')
     .transition()
-      .attr('fill-opacity', '0.4')
-      .attr('stroke-opacity', '0.1')
+    .attr('fill-opacity', '0.4')
+    .attr('stroke-opacity', '0.1')
     .transition()
-      .text(function (d) { return d; })
-      .attr('fill-opacity', '1')
-      .attr('stroke-opacity', '1')
+    .text(function (d) {
+      return d;
+    })
+    .attr('fill-opacity', '1')
+    .attr('stroke-opacity', '1')
     .transition()
-      .duration(0)
-      .attr('fill-opacity', null)
-      .attr('stroke-opacity', null)
-    ;
+    .duration(0)
+    .attr('fill-opacity', null)
+    .attr('stroke-opacity', null)
+  ;
 };
 
 function moveHead(wrapper, enter, exit, wOffset, cOffset) {
@@ -119,12 +152,12 @@ function moveHead(wrapper, enter, exit, wOffset, cOffset) {
   exit.classed('exiting', true);
   // translate cells forward, and the wrapper backwards
   wrapper.selectAll('.tape-cell')
-      .call(positionCells, cOffset);
+    .call(positionCells, cOffset);
   wrapper
-      .attr('transform', 'translate(' + (wOffset*cellWidth).toString() + ' 10)')
+    .attr('transform', 'translate(' + (wOffset * cellWidth).toString() + ' 10)')
     // animate wrapper returning to neutral position
     .transition()
-      .call(repositionWrapper);
+    .call(repositionWrapper);
 }
 
 TapeViz.prototype.headRight = function () {
@@ -136,7 +169,7 @@ TapeViz.prototype.headRight = function () {
   moveHead(this.wrapper,
     // add to right end
     this.wrapper.append('g')
-        .datum(this.readOffset(this.lookaround)),
+      .datum(this.readOffset(this.lookaround)),
     // remove from left end
     this.wrapper.select('.tape-cell'),
     1, -1);
@@ -147,9 +180,12 @@ TapeViz.prototype.headLeft = function () {
   this.wrapper.selectAll('.exiting').remove();
   moveHead(this.wrapper,
     this.wrapper.insert('g', ':first-child')
-        .datum(this.readOffset(-this.lookaround)),
+      .datum(this.readOffset(-this.lookaround)),
     this.wrapper.select('.wrapper > .tape-cell:last-of-type'),
     -1, 0);
 };
 
-module.exports = TapeViz;
+EditableTapeViz.prototype = Object.create(TapeViz.prototype);
+EditableTapeViz.prototype.constructor = EditableTapeViz;
+
+module.exports = {TapeViz: TapeViz, EditableTapeViz: EditableTapeViz};

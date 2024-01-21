@@ -9,9 +9,11 @@
  * @module
  */
 
-var TuringMachine = require('./TuringMachine').TuringMachine,
-    TapeViz = require('./tape/TapeViz'),
-    StateGraph = require('./state-diagram/StateGraph'),
+var TuringMachine = require('./TuringMachine').TuringMachine;
+var TapeVizModule = require('./tape/TapeViz.js');
+var TapeViz = TapeVizModule.TapeViz;
+var EditableTapeViz = TapeVizModule.EditableTapeViz;
+var StateGraph = require('./state-diagram/StateGraph'),
     StateViz = require('./state-diagram/StateViz'),
     watchInit = require('./watch').watchInit,
     d3 = require('d3');
@@ -55,8 +57,17 @@ function pulseEdge(edge) {
 }
 
 function addTape(div, spec) {
-  return new TapeViz(div.append('svg').attr('class', 'tm-tape'), 9,
-    spec.blank, spec.input ? String(spec.input).split('') : []);
+  return new TapeViz(div.append('svg').attr('class', 'tm-tape'),
+    9,
+    spec.blank,
+    spec.input ? String(spec.input).split('') : []);
+}
+
+function addEditableTape(div, spec) {
+  return new EditableTapeViz(div.append('div').attr('class', 'edit-tm-tape'),
+    9,
+    spec.blank,
+    spec.input ? String(spec.input).split('') : []);
 }
 
 /**
@@ -94,7 +105,8 @@ function TMViz(div, spec, posTable) {
   this.machine = new TuringMachine(
     animatedTransition(graph, animateAndContinue),
     spec.startState,
-    addTape(div, spec)
+    addTape(div, spec),
+    addEditableTape(div, spec)
   );
   // intercept and animate when the state is set
   watchInit(this.machine, 'state', function (prop, oldstate, newstate) {
@@ -145,6 +157,7 @@ TMViz.prototype.reset = function () {
   this.machine.state = this.__spec.startState;
   this.machine.tape.domNode.remove();
   this.machine.tape = addTape(this.__parentDiv, this.__spec);
+  this.machine.editableTape = addEditableTape(this.__parentDiv, this.__spec);
 };
 
 Object.defineProperty(TMViz.prototype, 'positionTable', {
